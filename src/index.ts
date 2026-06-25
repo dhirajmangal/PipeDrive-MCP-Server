@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import axios, { AxiosInstance } from "axios";
 
@@ -47,7 +46,7 @@ function ok(result: any): { content: { type: "text"; text: string }[] } {
 // MCP Server
 // ---------------------------------------------------------------------------
 
-const server = new McpServer({
+export const server = new McpServer({
   name: "pipedrive",
   version: "1.0.0",
 });
@@ -1879,13 +1878,4 @@ server.tool(
 // Start server
 // ---------------------------------------------------------------------------
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("Pipedrive MCP server running on stdio");
-}
 
-main().catch((err) => {
-  console.error("Fatal error:", err);
-  process.exit(1);
-});
