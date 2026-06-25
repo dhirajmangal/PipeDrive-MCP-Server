@@ -46,14 +46,15 @@ function ok(result: any): { content: { type: "text"; text: string }[] } {
 // MCP Server
 // ---------------------------------------------------------------------------
 
-export const server = new McpServer({
+export function createServer() {
+  const server = new McpServer({
   name: "pipedrive",
   version: "1.0.0",
-});
-
-// ======================== DEALS ========================
-
-server.tool(
+  });
+  
+  // ======================== DEALS ========================
+  
+  server.tool(
   "pipedrive_list_deals",
   "List deals with optional filtering",
   {
@@ -68,16 +69,16 @@ server.tool(
   async ({ user_id, filter_id, stage_id, status, start, limit, sort }) => {
     return ok(await pd("GET", "/deals", undefined, { user_id, filter_id, stage_id, status, start, limit, sort }));
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_deal",
   "Get a single deal by ID",
   { id: z.coerce.number().describe("Deal ID") },
   async ({ id }) => ok(await pd("GET", `/deals/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_deal",
   "Create a new deal",
   {
@@ -97,9 +98,9 @@ server.tool(
     add_time: z.string().optional().describe("Creation time override (YYYY-MM-DD HH:MM:SS)"),
   },
   async (params) => ok(await pd("POST", "/deals", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_deal",
   "Update an existing deal",
   {
@@ -119,16 +120,16 @@ server.tool(
     visible_to: z.coerce.number().optional().describe("Visibility setting"),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/deals/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_deal",
   "Delete a deal",
   { id: z.coerce.number().describe("Deal ID") },
   async ({ id }) => ok(await pd("DELETE", `/deals/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_search_deals",
   "Search for deals by term",
   {
@@ -142,9 +143,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/deals/search", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_deal_activities",
   "Get activities associated with a deal",
   {
@@ -154,9 +155,9 @@ server.tool(
     done: z.enum(["0", "1"]).optional().describe("Filter by done status"),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/deals/${id}/activities`, undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_deals_summary",
   "Get summary of deals (total values, counts, etc.)",
   {
@@ -166,9 +167,9 @@ server.tool(
     stage_id: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/deals/summary", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_deals_timeline",
   "Get deals timeline for a date range",
   {
@@ -183,11 +184,11 @@ server.tool(
     totals_convert_currency: z.string().optional().describe("Currency code for totals conversion"),
   },
   async (params) => ok(await pd("GET", "/deals/timeline", undefined, params))
-);
-
-// ======================== PERSONS ========================
-
-server.tool(
+  );
+  
+  // ======================== PERSONS ========================
+  
+  server.tool(
   "pipedrive_list_persons",
   "List persons/contacts with optional filtering",
   {
@@ -199,16 +200,16 @@ server.tool(
     sort: z.string().optional().describe("Sort field e.g. 'name ASC'"),
   },
   async (params) => ok(await pd("GET", "/persons", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_person",
   "Get a single person by ID",
   { id: z.coerce.number().describe("Person ID") },
   async ({ id }) => ok(await pd("GET", `/persons/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_person",
   "Create a new person/contact",
   {
@@ -229,9 +230,9 @@ server.tool(
     if (body.phone?.[0]) body.phone[0].primary = true;
     return ok(await pd("POST", "/persons", body));
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_person",
   "Update an existing person/contact",
   {
@@ -250,16 +251,16 @@ server.tool(
     if (params.phone) body.phone = params.phone.map((p, i) => ({ value: p, primary: i === 0 }));
     return ok(await pd("PUT", `/persons/${id}`, body));
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_person",
   "Delete a person/contact",
   { id: z.coerce.number().describe("Person ID") },
   async ({ id }) => ok(await pd("DELETE", `/persons/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_search_persons",
   "Search for persons by name, email, phone, or notes",
   {
@@ -271,9 +272,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/persons/search", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_person_deals",
   "Get deals associated with a person",
   {
@@ -284,11 +285,11 @@ server.tool(
     sort: z.string().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/persons/${id}/deals`, undefined, params))
-);
-
-// ======================== ORGANIZATIONS ========================
-
-server.tool(
+  );
+  
+  // ======================== ORGANIZATIONS ========================
+  
+  server.tool(
   "pipedrive_list_organizations",
   "List organizations with optional filtering",
   {
@@ -300,16 +301,16 @@ server.tool(
     sort: z.string().optional(),
   },
   async (params) => ok(await pd("GET", "/organizations", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_organization",
   "Get a single organization by ID",
   { id: z.coerce.number().describe("Organization ID") },
   async ({ id }) => ok(await pd("GET", `/organizations/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_organization",
   "Create a new organization",
   {
@@ -320,9 +321,9 @@ server.tool(
     address: z.string().optional().describe("Full address"),
   },
   async (params) => ok(await pd("POST", "/organizations", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_organization",
   "Update an existing organization",
   {
@@ -333,16 +334,16 @@ server.tool(
     address: z.string().optional().describe("Full address"),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/organizations/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_organization",
   "Delete an organization",
   { id: z.coerce.number().describe("Organization ID") },
   async ({ id }) => ok(await pd("DELETE", `/organizations/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_search_organizations",
   "Search for organizations by name or address",
   {
@@ -353,9 +354,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/organizations/search", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_organization_deals",
   "Get deals associated with an organization",
   {
@@ -366,9 +367,9 @@ server.tool(
     sort: z.string().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/organizations/${id}/deals`, undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_organization_persons",
   "Get persons associated with an organization",
   {
@@ -377,11 +378,11 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/organizations/${id}/persons`, undefined, params))
-);
-
-// ======================== ACTIVITIES ========================
-
-server.tool(
+  );
+  
+  // ======================== ACTIVITIES ========================
+  
+  server.tool(
   "pipedrive_list_activities",
   "List activities with optional filtering",
   {
@@ -395,16 +396,16 @@ server.tool(
     done: z.enum(["0", "1"]).optional().describe("Filter by completion status"),
   },
   async (params) => ok(await pd("GET", "/activities", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_activity",
   "Get a single activity by ID",
   { id: z.coerce.number().describe("Activity ID") },
   async ({ id }) => ok(await pd("GET", `/activities/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_activity",
   "Create a new activity (call, meeting, task, etc.)",
   {
@@ -424,9 +425,9 @@ server.tool(
     busy_flag: z.enum(["true", "false"]).optional().describe("Whether busy during this activity"),
   },
   async (params) => ok(await pd("POST", "/activities", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_activity",
   "Update an existing activity",
   {
@@ -445,18 +446,18 @@ server.tool(
     location: z.string().optional().describe("Activity location"),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/activities/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_activity",
   "Delete an activity",
   { id: z.coerce.number().describe("Activity ID") },
   async ({ id }) => ok(await pd("DELETE", `/activities/${id}`))
-);
-
-// ======================== PRODUCTS ========================
-
-server.tool(
+  );
+  
+  // ======================== PRODUCTS ========================
+  
+  server.tool(
   "pipedrive_list_products",
   "List products",
   {
@@ -466,16 +467,16 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/products", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_product",
   "Get a single product by ID",
   { id: z.coerce.number().describe("Product ID") },
   async ({ id }) => ok(await pd("GET", `/products/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_product",
   "Create a new product",
   {
@@ -493,9 +494,9 @@ server.tool(
     })).optional().describe("Product prices"),
   },
   async (params) => ok(await pd("POST", "/products", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_product",
   "Update an existing product",
   {
@@ -514,16 +515,16 @@ server.tool(
     })).optional().describe("Product prices"),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/products/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_product",
   "Delete a product",
   { id: z.coerce.number().describe("Product ID") },
   async ({ id }) => ok(await pd("DELETE", `/products/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_search_products",
   "Search for products by name",
   {
@@ -534,25 +535,25 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/products/search", undefined, params))
-);
-
-// ======================== PIPELINES ========================
-
-server.tool(
+  );
+  
+  // ======================== PIPELINES ========================
+  
+  server.tool(
   "pipedrive_list_pipelines",
   "List all pipelines",
   {},
   async () => ok(await pd("GET", "/pipelines"))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_pipeline",
   "Get a single pipeline by ID",
   { id: z.coerce.number().describe("Pipeline ID") },
   async ({ id }) => ok(await pd("GET", `/pipelines/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_pipeline",
   "Create a new pipeline",
   {
@@ -562,9 +563,9 @@ server.tool(
     active: z.enum(["0", "1"]).optional().describe("Whether active"),
   },
   async (params) => ok(await pd("POST", "/pipelines", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_pipeline",
   "Update an existing pipeline",
   {
@@ -575,16 +576,16 @@ server.tool(
     active: z.enum(["0", "1"]).optional(),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/pipelines/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_pipeline",
   "Delete a pipeline",
   { id: z.coerce.number().describe("Pipeline ID") },
   async ({ id }) => ok(await pd("DELETE", `/pipelines/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_pipeline_deals",
   "Get deals in a pipeline",
   {
@@ -599,9 +600,9 @@ server.tool(
     totals_convert_currency: z.string().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/pipelines/${id}/deals`, undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_pipeline_conversion_statistics",
   "Get deal conversion statistics for a pipeline",
   {
@@ -611,9 +612,9 @@ server.tool(
     user_id: z.coerce.number().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/pipelines/${id}/conversion_statistics`, undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_pipeline_movement_statistics",
   "Get deal movement statistics for a pipeline",
   {
@@ -623,27 +624,27 @@ server.tool(
     user_id: z.coerce.number().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/pipelines/${id}/movement_statistics`, undefined, params))
-);
-
-// ======================== STAGES ========================
-
-server.tool(
+  );
+  
+  // ======================== STAGES ========================
+  
+  server.tool(
   "pipedrive_list_stages",
   "List all stages or stages in a pipeline",
   {
     pipeline_id: z.coerce.number().optional().describe("Filter by pipeline ID"),
   },
   async (params) => ok(await pd("GET", "/stages", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_stage",
   "Get a single stage by ID",
   { id: z.coerce.number().describe("Stage ID") },
   async ({ id }) => ok(await pd("GET", `/stages/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_stage",
   "Create a new stage in a pipeline",
   {
@@ -655,9 +656,9 @@ server.tool(
     order_nr: z.coerce.number().optional().describe("Stage order number"),
   },
   async (params) => ok(await pd("POST", "/stages", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_stage",
   "Update an existing stage",
   {
@@ -670,16 +671,16 @@ server.tool(
     order_nr: z.coerce.number().optional(),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/stages/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_stage",
   "Delete a stage",
   { id: z.coerce.number().describe("Stage ID") },
   async ({ id }) => ok(await pd("DELETE", `/stages/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_stage_deals",
   "Get deals in a stage",
   {
@@ -691,11 +692,11 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async ({ id, ...params }) => ok(await pd("GET", `/stages/${id}/deals`, undefined, params))
-);
-
-// ======================== NOTES ========================
-
-server.tool(
+  );
+  
+  // ======================== NOTES ========================
+  
+  server.tool(
   "pipedrive_list_notes",
   "List notes with optional filtering",
   {
@@ -714,16 +715,16 @@ server.tool(
     pinned_to_organization_flag: z.enum(["0", "1"]).optional(),
   },
   async (params) => ok(await pd("GET", "/notes", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_note",
   "Get a single note by ID",
   { id: z.coerce.number().describe("Note ID") },
   async ({ id }) => ok(await pd("GET", `/notes/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_note",
   "Create a note on a deal, person, organization, or lead",
   {
@@ -737,9 +738,9 @@ server.tool(
     pinned_to_organization_flag: z.enum(["0", "1"]).optional().describe("Pin to organization"),
   },
   async (params) => ok(await pd("POST", "/notes", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_note",
   "Update an existing note",
   {
@@ -754,18 +755,18 @@ server.tool(
     pinned_to_organization_flag: z.enum(["0", "1"]).optional(),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/notes/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_note",
   "Delete a note",
   { id: z.coerce.number().describe("Note ID") },
   async ({ id }) => ok(await pd("DELETE", `/notes/${id}`))
-);
-
-// ======================== LEADS ========================
-
-server.tool(
+  );
+  
+  // ======================== LEADS ========================
+  
+  server.tool(
   "pipedrive_list_leads",
   "List leads with optional filtering",
   {
@@ -779,16 +780,16 @@ server.tool(
     sort: z.string().optional(),
   },
   async (params) => ok(await pd("GET", "/leads", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_lead",
   "Get a single lead by ID",
   { id: z.string().describe("Lead ID (UUID)") },
   async ({ id }) => ok(await pd("GET", `/leads/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_lead",
   "Create a new lead",
   {
@@ -806,9 +807,9 @@ server.tool(
     was_seen: z.boolean().optional().describe("Whether lead has been seen"),
   },
   async (params) => ok(await pd("POST", "/leads", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_lead",
   "Update an existing lead",
   {
@@ -827,16 +828,16 @@ server.tool(
     is_archived: z.boolean().optional().describe("Archive/unarchive the lead"),
   },
   async ({ id, ...body }) => ok(await pd("PATCH", `/leads/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_lead",
   "Delete a lead",
   { id: z.string().describe("Lead ID (UUID)") },
   async ({ id }) => ok(await pd("DELETE", `/leads/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_search_leads",
   "Search for leads",
   {
@@ -849,52 +850,52 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/leads/search", undefined, params))
-);
-
-// ======================== USERS ========================
-
-server.tool(
+  );
+  
+  // ======================== USERS ========================
+  
+  server.tool(
   "pipedrive_list_users",
   "List all users in the company",
   {},
   async () => ok(await pd("GET", "/users"))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_user",
   "Get a user by ID",
   { id: z.coerce.number().describe("User ID") },
   async ({ id }) => ok(await pd("GET", `/users/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_current_user",
   "Get the current authenticated user",
   {},
   async () => ok(await pd("GET", "/users/me"))
-);
-
-// ======================== FILTERS ========================
-
-server.tool(
+  );
+  
+  // ======================== FILTERS ========================
+  
+  server.tool(
   "pipedrive_list_filters",
   "List all filters",
   {
     type: z.enum(["deals", "leads", "org", "people", "products", "activity"]).optional().describe("Filter entity type"),
   },
   async (params) => ok(await pd("GET", "/filters", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_filter",
   "Get a filter by ID",
   { id: z.coerce.number().describe("Filter ID") },
   async ({ id }) => ok(await pd("GET", `/filters/${id}`))
-);
-
-// ======================== SEARCH ========================
-
-server.tool(
+  );
+  
+  // ======================== SEARCH ========================
+  
+  server.tool(
   "pipedrive_search",
   "Search across all Pipedrive entities",
   {
@@ -906,18 +907,18 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/itemSearch", undefined, params))
-);
-
-// ======================== WEBHOOKS ========================
-
-server.tool(
+  );
+  
+  // ======================== WEBHOOKS ========================
+  
+  server.tool(
   "pipedrive_list_webhooks",
   "List all webhooks",
   {},
   async () => ok(await pd("GET", "/webhooks"))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_webhook",
   "Create a new webhook",
   {
@@ -929,18 +930,18 @@ server.tool(
     http_auth_password: z.string().optional().describe("HTTP basic auth password"),
   },
   async (params) => ok(await pd("POST", "/webhooks", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_webhook",
   "Delete a webhook",
   { id: z.coerce.number().describe("Webhook ID") },
   async ({ id }) => ok(await pd("DELETE", `/webhooks/${id}`))
-);
-
-// ======================== DEAL FIELDS ========================
-
-server.tool(
+  );
+  
+  // ======================== DEAL FIELDS ========================
+  
+  server.tool(
   "pipedrive_list_deal_fields",
   "List all deal fields (including custom fields)",
   {
@@ -948,9 +949,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/dealFields", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_deal_field",
   "Create a custom deal field",
   {
@@ -960,18 +961,18 @@ server.tool(
     add_visible_flag: z.boolean().optional().describe("Whether visible in add-new dialogs"),
   },
   async (params) => ok(await pd("POST", "/dealFields", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_deal_field",
   "Delete a custom deal field",
   { id: z.coerce.number().describe("Deal field ID") },
   async ({ id }) => ok(await pd("DELETE", `/dealFields/${id}`))
-);
-
-// ======================== PERSON FIELDS ========================
-
-server.tool(
+  );
+  
+  // ======================== PERSON FIELDS ========================
+  
+  server.tool(
   "pipedrive_list_person_fields",
   "List all person fields (including custom fields)",
   {
@@ -979,9 +980,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/personFields", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_person_field",
   "Create a custom person field",
   {
@@ -991,11 +992,11 @@ server.tool(
     add_visible_flag: z.boolean().optional(),
   },
   async (params) => ok(await pd("POST", "/personFields", params))
-);
-
-// ======================== ORGANIZATION FIELDS ========================
-
-server.tool(
+  );
+  
+  // ======================== ORGANIZATION FIELDS ========================
+  
+  server.tool(
   "pipedrive_list_organization_fields",
   "List all organization fields (including custom fields)",
   {
@@ -1003,31 +1004,31 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/organizationFields", undefined, params))
-);
-
-// ======================== ACTIVITY TYPES ========================
-
-server.tool(
+  );
+  
+  // ======================== ACTIVITY TYPES ========================
+  
+  server.tool(
   "pipedrive_list_activity_types",
   "List all activity types",
   {},
   async () => ok(await pd("GET", "/activityTypes"))
-);
-
-// ======================== CURRENCIES ========================
-
-server.tool(
+  );
+  
+  // ======================== CURRENCIES ========================
+  
+  server.tool(
   "pipedrive_list_currencies",
   "List all supported currencies",
   {
     term: z.string().optional().describe("Search term for currency name/code"),
   },
   async (params) => ok(await pd("GET", "/currencies", undefined, params))
-);
-
-// ======================== RECENTS ========================
-
-server.tool(
+  );
+  
+  // ======================== RECENTS ========================
+  
+  server.tool(
   "pipedrive_get_recents",
   "Get recent changes across entities",
   {
@@ -1037,11 +1038,11 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/recents", undefined, params))
-);
-
-// ======================== FILES ========================
-
-server.tool(
+  );
+  
+  // ======================== FILES ========================
+  
+  server.tool(
   "pipedrive_list_files",
   "List files with optional filtering",
   {
@@ -1050,25 +1051,25 @@ server.tool(
     sort: z.string().optional(),
   },
   async (params) => ok(await pd("GET", "/files", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_file",
   "Get a file by ID",
   { id: z.coerce.number().describe("File ID") },
   async ({ id }) => ok(await pd("GET", `/files/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_file",
   "Delete a file",
   { id: z.coerce.number().describe("File ID") },
   async ({ id }) => ok(await pd("DELETE", `/files/${id}`))
-);
-
-// ======================== GOALS ========================
-
-server.tool(
+  );
+  
+  // ======================== GOALS ========================
+  
+  server.tool(
   "pipedrive_list_goals",
   "List goals",
   {
@@ -1086,11 +1087,11 @@ server.tool(
     period_end: z.string().optional().describe("End of period (YYYY-MM-DD)"),
   },
   async (params) => ok(await pd("GET", "/goals/find", undefined, params))
-);
-
-// ======================== CALL LOGS ========================
-
-server.tool(
+  );
+  
+  // ======================== CALL LOGS ========================
+  
+  server.tool(
   "pipedrive_list_call_logs",
   "List call logs",
   {
@@ -1098,9 +1099,9 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/callLogs", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_call_log",
   "Log a phone call",
   {
@@ -1117,11 +1118,11 @@ server.tool(
     note: z.string().optional().describe("Call note"),
   },
   async (params) => ok(await pd("POST", "/callLogs", params))
-);
-
-// ======================== PROJECTS ========================
-
-server.tool(
+  );
+  
+  // ======================== PROJECTS ========================
+  
+  server.tool(
   "pipedrive_list_projects",
   "List projects",
   {
@@ -1133,16 +1134,16 @@ server.tool(
     filter_id: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/projects", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_project",
   "Get a project by ID",
   { id: z.coerce.number().describe("Project ID") },
   async ({ id }) => ok(await pd("GET", `/projects/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_project",
   "Create a new project",
   {
@@ -1159,9 +1160,9 @@ server.tool(
     person_id: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("POST", "/projects", params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_update_project",
   "Update an existing project",
   {
@@ -1179,25 +1180,25 @@ server.tool(
     person_id: z.coerce.number().optional(),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/projects/${id}`, body))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_delete_project",
   "Delete a project",
   { id: z.coerce.number().describe("Project ID") },
   async ({ id }) => ok(await pd("DELETE", `/projects/${id}`))
-);
-
-// ======================== SUBSCRIPTIONS ========================
-
-server.tool(
+  );
+  
+  // ======================== SUBSCRIPTIONS ========================
+  
+  server.tool(
   "pipedrive_get_subscription",
   "Get a recurring subscription by deal ID",
   { deal_id: z.coerce.number().describe("Deal ID") },
   async ({ deal_id }) => ok(await pd("GET", `/subscriptions/find/${deal_id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_create_recurring_subscription",
   "Create a recurring subscription on a deal",
   {
@@ -1215,11 +1216,11 @@ server.tool(
     })).optional().describe("Manual payment schedule"),
   },
   async (params) => ok(await pd("POST", "/subscriptions/recurring", params))
-);
-
-// ======================== MAIL ========================
-
-server.tool(
+  );
+  
+  // ======================== MAIL ========================
+  
+  server.tool(
   "pipedrive_list_mail_threads",
   "List mail threads",
   {
@@ -1228,29 +1229,29 @@ server.tool(
     limit: z.coerce.number().optional(),
   },
   async (params) => ok(await pd("GET", "/mailbox/mailThreads", undefined, params))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_mail_thread",
   "Get a mail thread by ID",
   { id: z.coerce.number().describe("Mail thread ID") },
   async ({ id }) => ok(await pd("GET", `/mailbox/mailThreads/${id}`))
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_get_mail_thread_messages",
   "Get messages in a mail thread",
   { id: z.coerce.number().describe("Mail thread ID") },
   async ({ id }) => ok(await pd("GET", `/mailbox/mailThreads/${id}/mailMessages`))
-);
-
-// ---------------------------------------------------------------------------
-// REPORTING & ANALYTICS
-// ---------------------------------------------------------------------------
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function periodBounds(period: "daily" | "weekly" | "monthly", offsetPeriods = 0): { start: string; end: string } {
+  );
+  
+  // ---------------------------------------------------------------------------
+  // REPORTING & ANALYTICS
+  // ---------------------------------------------------------------------------
+  
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  
+  function periodBounds(period: "daily" | "weekly" | "monthly", offsetPeriods = 0): { start: string; end: string } {
   const now = new Date();
   let s: Date, e: Date;
   if (period === "daily") {
@@ -1265,9 +1266,9 @@ function periodBounds(period: "daily" | "weekly" | "monthly", offsetPeriods = 0)
     e = new Date(now.getFullYear(), now.getMonth() - offsetPeriods + 1, 0, 23, 59, 59, 999);
   }
   return { start: s.toISOString().slice(0, 10), end: e.toISOString().slice(0, 10) };
-}
-
-async function fetchAllPages(endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
+  }
+  
+  async function fetchAllPages(endpoint: string, params: Record<string, any> = {}): Promise<any[]> {
   const results: any[] = [];
   let start = 0;
   const limit = 500;
@@ -1284,36 +1285,36 @@ async function fetchAllPages(endpoint: string, params: Record<string, any> = {})
     start += limit;
   }
   return results;
-}
-
-const fetchAllDeals      = (params: Record<string, any> = {}) => fetchAllPages("/deals",      params);
-const fetchAllActivities = (params: Record<string, any> = {}) => fetchAllPages("/activities", params);
-
-function inRange(dateStr: string | null | undefined, start: string, end: string): boolean {
+  }
+  
+  const fetchAllDeals      = (params: Record<string, any> = {}) => fetchAllPages("/deals",      params);
+  const fetchAllActivities = (params: Record<string, any> = {}) => fetchAllPages("/activities", params);
+  
+  function inRange(dateStr: string | null | undefined, start: string, end: string): boolean {
   if (!dateStr) return false;
   const d = dateStr.slice(0, 10);
   return d >= start && d <= end;
-}
-
-function countBy<T>(arr: T[], key: (item: T) => string): Record<string, number> {
+  }
+  
+  function countBy<T>(arr: T[], key: (item: T) => string): Record<string, number> {
   return arr.reduce((acc, item) => {
     const k = key(item) || "Unknown";
     acc[k] = (acc[k] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-}
-
-function sumBy<T>(arr: T[], key: (item: T) => number): number {
+  }
+  
+  function sumBy<T>(arr: T[], key: (item: T) => number): number {
   return arr.reduce((acc, item) => acc + (key(item) || 0), 0);
-}
-
-function sortedEntries(obj: Record<string, number>): [string, number][] {
+  }
+  
+  function sortedEntries(obj: Record<string, number>): [string, number][] {
   return Object.entries(obj).sort((a, b) => b[1] - a[1]);
-}
-
-// ── Tools ─────────────────────────────────────────────────────────────────────
-
-server.tool(
+  }
+  
+  // ── Tools ─────────────────────────────────────────────────────────────────────
+  
+  server.tool(
   "pipedrive_performance_report",
   "Generate a performance report for a given period (daily/weekly/monthly). Returns wins, losses, new deals, revenue, conversion rate, average deal size, and top performers.",
   {
@@ -1332,27 +1333,27 @@ server.tool(
       ({ start, end } = periodBounds(period, offset));
     }
     const allDeals = await fetchAllDeals({ status: "all_not_deleted", ...(pipeline_id ? { pipeline_id } : {}) });
-
+  
     const won    = allDeals.filter(d => d.status === "won"  && inRange(d.won_time, start, end));
     const lost   = allDeals.filter(d => d.status === "lost" && inRange(d.lost_time, start, end));
     const opened = allDeals.filter(d => inRange(d.add_time, start, end));
     const open   = allDeals.filter(d => d.status === "open");
-
+  
     const wonValue  = sumBy(won,  d => d.value || 0);
     const lostValue = sumBy(lost, d => d.value || 0);
     const pipelineValue = sumBy(open, d => d.value || 0);
-
+  
     const totalClosed = won.length + lost.length;
     const winRate = totalClosed > 0 ? ((won.length / totalClosed) * 100).toFixed(1) : "N/A";
     const avgWonSize = won.length > 0 ? Math.round(wonValue / won.length) : 0;
-
+  
     // Won by owner
     const wonByOwner  = countBy(won,  d => d.owner_name || d.user_id?.name);
     const lostByOwner = countBy(lost, d => d.owner_name || d.user_id?.name);
-
+  
     // Won by pipeline/stage
     const wonByStage = countBy(won, d => d.stage_order_nr ? `Stage ${d.stage_order_nr}` : "Unknown");
-
+  
     // ── Composite performance score ──────────────────────────────────────
     // Considers four dimensions:
     //   1. Win Rate    (30%) — deals won / total closed
@@ -1376,10 +1377,10 @@ server.tool(
     //
     // Deal value uses the highest avg won deal value as the reference (1.0).
     // This separates reps landing £50k contracts from reps doing £100 call-outs.
-
+  
     const allOwners = new Set([...Object.keys(wonByOwner), ...Object.keys(lostByOwner)]);
     const maxWon = Math.max(...Object.values(wonByOwner), 1);
-
+  
     // Calculate avg days-to-close per owner from won deals (add_time → won_time)
     function daysToClose(d: any): number | null {
       if (!d.add_time || !d.won_time) return null;
@@ -1388,7 +1389,7 @@ server.tool(
       if (isNaN(added) || isNaN(closed)) return null;
       return Math.max(0, (closed - added) / 86400000);
     }
-
+  
     const closeTimesByOwner: Record<string, number[]> = {};
     const revenueByOwner: Record<string, number> = {};
     for (const d of won) {
@@ -1399,14 +1400,14 @@ server.tool(
       }
       revenueByOwner[owner] = (revenueByOwner[owner] || 0) + (d.value || 0);
     }
-
+  
     // Team median close time (across all won deals). Floor at 1 day to avoid
     // division-by-zero when many deals close same day (median=0).
     const allCloseTimes = won.map(daysToClose).filter((d): d is number => d !== null).sort((a, b) => a - b);
     const teamMedianClose = Math.max(1, allCloseTimes.length > 0
       ? allCloseTimes[Math.floor(allCloseTimes.length / 2)]
       : 30);
-
+  
     // Avg deal value per owner, and max across team
     const avgValueByOwner: Record<string, number> = {};
     for (const owner of Object.keys(wonByOwner)) {
@@ -1415,16 +1416,16 @@ server.tool(
         : 0;
     }
     const maxAvgValue = Math.max(...Object.values(avgValueByOwner), 1);
-
+  
     const leaderboard = Array.from(allOwners).map(owner => {
       const w = wonByOwner[owner] || 0;
       const l = lostByOwner[owner] || 0;
       const total = w + l;
       const ownerWinRate = total > 0 ? w / total : 0;
-
+  
       // Volume: normalised 0–1 against top performer
       const volumeScore = w / maxWon;
-
+  
       // Speed: avg close time for this owner vs team median
       const ownerTimes = closeTimesByOwner[owner] || [];
       const avgClose = ownerTimes.length > 0
@@ -1434,12 +1435,12 @@ server.tool(
       const speedMultiplier = avgClose !== null && avgClose > 0
         ? Math.min(1.5, Math.max(0.5, teamMedianClose / avgClose))
         : 1.0; // neutral if no data
-
+  
       // Deal value: avg won value normalised to top performer
       const ownerAvgValue = avgValueByOwner[owner] || 0;
       const valueScore = ownerAvgValue / maxAvgValue;
       const totalRevenue = revenueByOwner[owner] || 0;
-
+  
       // Weighted composite (0–100)
       const composite = (
         (ownerWinRate * 30) +
@@ -1447,7 +1448,7 @@ server.tool(
         (speedMultiplier / 1.5 * 20) + // normalise [0.5–1.5] → [0.33–1.0] × 20
         (valueScore * 25)
       );
-
+  
       return {
         owner,
         won: w,
@@ -1471,7 +1472,7 @@ server.tool(
         },
       };
     }).sort((a, b) => b.performance_score - a.performance_score);
-
+  
     const report = {
       period: { type: period, start, end },
       summary: {
@@ -1500,12 +1501,12 @@ server.tool(
       },
       won_by_stage: sortedEntries(wonByStage),
     };
-
+  
     return ok({ success: true, data: report });
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_loss_analysis",
   "Analyse lost deals to identify patterns: top loss reasons, loss by owner, loss by stage, loss by organisation type, and trends over time.",
   {
@@ -1517,31 +1518,31 @@ server.tool(
   async ({ period, offset = 0, pipeline_id, min_value }) => {
     let start = "2000-01-01", end = "2999-12-31";
     if (period) ({ start, end } = periodBounds(period, offset));
-
+  
     const allDeals = await fetchAllDeals({ status: "lost", ...(pipeline_id ? { pipeline_id } : {}) });
     const lost = allDeals.filter(d =>
       inRange(d.lost_time, start, end) &&
       (!min_value || (d.value || 0) >= min_value)
     );
-
+  
     const byReason  = countBy(lost, d => d.lost_reason || "No reason logged");
     const byOwner   = countBy(lost, d => d.owner_name || "Unknown");
     const byOrg     = countBy(lost, d => d.org_name   || "No organisation");
     const byStage   = countBy(lost, d => d.stage_order_nr != null ? `Stage ${d.stage_order_nr}` : "Unknown");
-
+  
     // Monthly trend
     const byMonth: Record<string, number> = {};
     for (const d of lost) {
       const m = (d.lost_time || "").slice(0, 7);
       if (m) byMonth[m] = (byMonth[m] || 0) + 1;
     }
-
+  
     // No-reason rate
     const noReasonCount = lost.filter(d => !d.lost_reason).length;
     const noReasonPct = lost.length > 0 ? ((noReasonCount / lost.length) * 100).toFixed(1) : "0";
-
+  
     const totalLostValue = sumBy(lost, d => d.value || 0);
-
+  
     return ok({
       success: true,
       data: {
@@ -1566,9 +1567,9 @@ server.tool(
       },
     });
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_pipeline_health",
   "Assess open pipeline health: stale deals (no activity in N days), deals missing key data, deals past expected close date, and overall weighted value.",
   {
@@ -1578,35 +1579,35 @@ server.tool(
   },
   async ({ pipeline_id, stale_days = 30, limit = 50 }) => {
     const allDeals = await fetchAllDeals({ status: "open", ...(pipeline_id ? { pipeline_id } : {}) });
-
+  
     const today = new Date().toISOString().slice(0, 10);
     const staleThreshold = new Date();
     staleThreshold.setDate(staleThreshold.getDate() - stale_days);
     const staleDate = staleThreshold.toISOString().slice(0, 10);
-
+  
     const stale = allDeals.filter(d => {
       const lastActivity = d.last_activity_date;
       const updated = (d.update_time || "").slice(0, 10);
       const reference = lastActivity || updated;
       return reference < staleDate;
     });
-
+  
     const pastCloseDate = allDeals.filter(d =>
       d.expected_close_date && d.expected_close_date < today
     );
-
+  
     const missingOrg    = allDeals.filter(d => !d.org_id);
     const missingPerson = allDeals.filter(d => !d.person_id);
     const missingValue  = allDeals.filter(d => !d.value || d.value === 0);
     const noNextActivity = allDeals.filter(d => !d.next_activity_id);
     const noActivities  = allDeals.filter(d => !d.activities_count || d.activities_count === 0);
-
+  
     const totalValue    = sumBy(allDeals, d => d.value || 0);
     const weightedValue = sumBy(allDeals, d => d.weighted_value || 0);
-
+  
     const staleByOwner = countBy(stale, d => d.owner_name || "Unknown");
     const byStage      = countBy(allDeals, d => d.stage_order_nr != null ? `Stage ${d.stage_order_nr}` : "Unknown");
-
+  
     // Sort stale by most days stale first, past close by most overdue first
     const staleSorted = [...stale].sort((a, b) => {
       const aDate = a.last_activity_date || a.update_time || "";
@@ -1620,7 +1621,7 @@ server.tool(
     const missingValSorted = [...missingValue].sort((a, b) =>
       (a.title || "").localeCompare(b.title || "")
     );
-
+  
     return ok({
       success: true,
       data: {
@@ -1659,9 +1660,9 @@ server.tool(
       },
     });
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_activity_audit",
   "Audit activity logging quality: deals with no activities, overdue activities, missing call logs, and rep-level logging hygiene scores.",
   {
@@ -1672,33 +1673,33 @@ server.tool(
     const since = new Date();
     since.setDate(since.getDate() - days_back);
     const sinceStr = since.toISOString().slice(0, 10);
-
+  
     const [openDeals, activities] = await Promise.all([
       fetchAllDeals({ status: "open", ...(pipeline_id ? { pipeline_id } : {}) }),
       fetchAllActivities({ start_date: sinceStr, done: 0 }),
     ]);
-
+  
     const overdueActivities = activities.filter(a => {
       if (a.done) return false;
       const due = a.due_date;
       return due && due < new Date().toISOString().slice(0, 10);
     });
-
+  
     // Deals with zero logged activities
     const noActivity   = openDeals.filter(d => !d.activities_count || d.activities_count === 0);
     const noDoneActs   = openDeals.filter(d => !d.done_activities_count || d.done_activities_count === 0);
-
+  
     // Overdue by owner
     const overdueByOwner = countBy(overdueActivities, a => a.owner_name || a.user_id?.name || "Unknown");
-
+  
     // Activity type breakdown
     const typeBreakdown = countBy(activities, a => a.type || "unknown");
-
+  
     // Per-rep hygiene: open deals vs logged activities
     const repDeals: Record<string, number>    = countBy(openDeals, d => d.owner_name || "Unknown");
     const repNoActs: Record<string, number>   = countBy(noActivity, d => d.owner_name || "Unknown");
     const repOverdue: Record<string, number>  = countBy(overdueActivities, a => a.owner_name || a.user_id?.name || "Unknown");
-
+  
     const repHygiene = Object.keys(repDeals).map(rep => ({
       rep,
       open_deals: repDeals[rep] || 0,
@@ -1710,7 +1711,7 @@ server.tool(
         return Math.max(0, Math.round((1 - issues / total) * 100));
       })(),
     })).sort((a, b) => a.hygiene_score - b.hygiene_score);
-
+  
     return ok({
       success: true,
       data: {
@@ -1732,9 +1733,9 @@ server.tool(
       },
     });
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_opportunities_report",
   "Identify high-value opportunities: deals advancing in pipeline, deals with high probability, recently re-engaged deals, and leads not yet converted.",
   {
@@ -1747,20 +1748,20 @@ server.tool(
       fetchAllDeals({ status: "open", ...(pipeline_id ? { pipeline_id } : {}) }),
       pd("GET", "/leads", undefined, { limit: 500 }),
     ]);
-
+  
     const filtered = openDeals.filter(d => (d.value || 0) >= min_value);
-
+  
     // High probability
     const highProb = filtered
       .filter(d => d.probability != null && d.probability >= 70)
       .sort((a, b) => (b.value || 0) - (a.value || 0))
       .slice(0, top_n);
-
+  
     // High value open deals
     const highValue = [...filtered]
       .sort((a, b) => (b.value || 0) - (a.value || 0))
       .slice(0, top_n);
-
+  
     // Recently active (activity in last 7 days)
     const recentDate = new Date(); recentDate.setDate(recentDate.getDate() - 7);
     const recentStr = recentDate.toISOString().slice(0, 10);
@@ -1768,7 +1769,7 @@ server.tool(
       .filter(d => d.last_activity_date && d.last_activity_date >= recentStr)
       .sort((a, b) => (b.value || 0) - (a.value || 0))
       .slice(0, top_n);
-
+  
     // Closing soon (expected close within 30 days)
     const today = new Date().toISOString().slice(0, 10);
     const in30  = new Date(); in30.setDate(in30.getDate() + 30);
@@ -1777,10 +1778,10 @@ server.tool(
       .filter(d => d.expected_close_date && d.expected_close_date >= today && d.expected_close_date <= in30Str)
       .sort((a, b) => (a.expected_close_date || "").localeCompare(b.expected_close_date || ""))
       .slice(0, top_n);
-
+  
     // Unconverted leads
     const unconvertedLeads = (leads.data || []).filter((l: any) => !l.is_archived);
-
+  
     const fmt = (d: any) => ({
       id: d.id, title: d.title, value: d.value, probability: d.probability,
       owner: d.owner_name, org: d.org_name,
@@ -1789,7 +1790,7 @@ server.tool(
       next_activity: d.next_activity_date,
       stage: d.stage_order_nr,
     });
-
+  
     return ok({
       success: true,
       data: {
@@ -1811,9 +1812,9 @@ server.tool(
       },
     });
   }
-);
-
-server.tool(
+  );
+  
+  server.tool(
   "pipedrive_comparative_report",
   "Compare performance across two consecutive periods (e.g. this month vs last month): deals won/lost, revenue, win rate, and rep-level changes.",
   {
@@ -1823,9 +1824,9 @@ server.tool(
   async ({ period, pipeline_id }) => {
     const current  = periodBounds(period, 0);
     const previous = periodBounds(period, 1);
-
+  
     const allDeals = await fetchAllDeals({ status: "all_not_deleted", ...(pipeline_id ? { pipeline_id } : {}) });
-
+  
     const periodStats = (start: string, end: string) => {
       const won    = allDeals.filter(d => d.status === "won"  && inRange(d.won_time,  start, end));
       const lost   = allDeals.filter(d => d.status === "lost" && inRange(d.lost_time, start, end));
@@ -1841,12 +1842,12 @@ server.tool(
         by_owner: countBy(won, d => d.owner_name || "Unknown"),
       };
     };
-
+  
     const curr = periodStats(current.start, current.end);
     const prev = periodStats(previous.start, previous.end);
-
+  
     const pct = (a: number, b: number) => b === 0 ? (a > 0 ? "+∞%" : "0%") : `${a >= b ? "+" : ""}${(((a - b) / b) * 100).toFixed(1)}%`;
-
+  
     // Owner comparison
     const allOwners = new Set([...Object.keys(curr.by_owner), ...Object.keys(prev.by_owner)]);
     const ownerComparison = Array.from(allOwners).map(owner => ({
@@ -1855,7 +1856,7 @@ server.tool(
       previous_won: prev.by_owner[owner] || 0,
       change: pct(curr.by_owner[owner] || 0, prev.by_owner[owner] || 0),
     })).sort((a, b) => b.current_won - a.current_won);
-
+  
     return ok({
       success: true,
       data: {
@@ -1872,10 +1873,11 @@ server.tool(
       },
     });
   }
-);
+  );
+  
+  // ---------------------------------------------------------------------------
+  // Start server
+  // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// Start server
-// ---------------------------------------------------------------------------
-
-
+  return server;
+}

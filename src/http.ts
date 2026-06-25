@@ -1,7 +1,7 @@
 import express from "express";
 import { randomUUID } from "crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { server } from "./index.js";
+import { createServer } from "./index.js";
 
 const app = express();
 app.use(express.json());
@@ -31,6 +31,7 @@ app.post("/mcp", async (req, res) => {
       }
     };
 
+    const server = createServer();
     await server.connect(transport);
   }
 
