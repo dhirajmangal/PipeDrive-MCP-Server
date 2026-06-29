@@ -38,6 +38,9 @@ async function pd(method: string, path: string, data?: any, params?: Record<stri
   }
 }
 
+const UNIT_TYPE_FIELD = "5e5e5ca11fecee901991dceb79f39b9235ad5beb";
+const BUYING_PURPOSE_FIELD = "16729fa3760725ab4339d928c582e7af99271c00";
+
 function ok(result: any): { content: { type: "text"; text: string }[] } {
   return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
 }
@@ -120,6 +123,93 @@ export function createServer() {
     visible_to: z.coerce.number().optional().describe("Visibility setting"),
   },
   async ({ id, ...body }) => ok(await pd("PUT", `/deals/${id}`, body))
+  );
+  
+  server.tool(
+  "pipedrive_debug_deal_custom_fields",
+  "Debug deal custom fields for Unit Type and Buying Purpose",
+  {
+    deal_id: z.coerce.number().describe("Deal ID"),
+  },
+  async ({ deal_id }) => ok(await pd("GET", `/deals/${deal_id}`, undefined, { include_fields: "custom_fields" }))
+  );
+
+  server.tool(
+  "pipedrive_update_deal_custom_fields",
+  "Update deal custom fields for Unit Type and Buying Purpose",
+  {
+    deal_id: z.coerce.number().describe("Deal ID"),
+    unit_type: z.string().describe("Unit Type text value"),
+    buying_purpose: z.string().describe("Buying Purpose text value"),
+    dry_run: z.boolean().optional().default(false).describe("If true, do not perform the update"),
+    overwrite: z.boolean().optional().default(false).describe("If false, preserve existing custom field values"),
+  },
+  async ({ deal_id, unit_type, buying_purpose, dry_run = false, overwrite = false }) => {
+    const current = await pd("GET", `/deals/${deal_id}`, undefined, { include_fields: "custom_fields" });
+    if (!current.success && current.error) {
+      return ok(current);
+    }
+
+    const existingFields = current.data?.custom_fields ?? {};
+    const existingUnitType = existingFields[UNIT_TYPE_FIELD] ?? "";
+    const existingBuyingPurpose = existingFields[BUYING_PURPOSE_FIELD] ?? "";
+
+    if (dry_run) {
+      return ok({
+        message: "Dry run: no update was performed",
+        deal_id,
+        unit_type,
+        buying_purpose,
+        overwrite,
+        existing_custom_fields: existingFields,
+      });
+    }
+
+    if (!overwrite && existingUnitType !== "" && existingBuyingPurpose !== "") {
+      return ok({
+        message: "No update performed because custom fields already contain values and overwrite is false",
+        deal_id,
+        existing_custom_fields: existingFields,
+      });
+    }
+
+    const patchBody = {
+      custom_fields: {
+        [UNIT_TYPE_FIELD]: unit_type,
+        [BUYING_PURPOSE_FIELD]: buying_purpose,
+      },
+    };
+
+    const updateResult = await pd("PATCH", `/deals/${deal_id}`, patchBody);
+    if (!updateResult.success && updateResult.error) {
+      return ok(updateResult);
+    }
+
+    const verification = await pd("GET", `/deals/${deal_id}` , undefined, { include_fields: "custom_fields" });
+    if (!verification.success && verification.error) {
+      return ok(verification);
+    }
+
+    const verifiedFields = verification.data?.custom_fields ?? {};
+    const verifiedUnitType = verifiedFields[UNIT_TYPE_FIELD] ?? "";
+    const verifiedBuyingPurpose = verifiedFields[BUYING_PURPOSE_FIELD] ?? "";
+
+    if (verifiedUnitType === unit_type && verifiedBuyingPurpose === buying_purpose) {
+      return ok({
+        message: "Custom fields updated and verified",
+        deal_id,
+        updated_custom_fields: verifiedFields,
+        update_response: updateResult,
+      });
+    }
+
+    return {
+      content: [{
+        type: "text" as const,
+        text: "The update was attempted, but the actual Pipedrive custom-field column is still blank after verification.",
+      }],
+    };
+  }
   );
   
   server.tool(
