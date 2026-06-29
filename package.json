@@ -7,15 +7,11 @@
     "pipedrive-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && node scripts/patch-custom-fields.mjs",
+    "build": "tsc",
     "start": "node dist/http.js",
-    "dev": "tsc && node scripts/patch-custom-fields.mjs && node dist/index.js"
+    "dev": "tsc && node dist/index.js"
   },
-  "keywords": [
-    "pipedrive",
-    "mcp",
-    "crm"
-  ],
+  "keywords": ["pipedrive", "mcp", "crm"],
   "author": "",
   "license": "CC-BY-NC-SA-4.0",
   "description": "Comprehensive MCP server for Pipedrive CRM",
