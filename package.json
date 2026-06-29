@@ -7,9 +7,9 @@
     "pipedrive-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/patch-custom-fields.mjs",
     "start": "node dist/http.js",
-    "dev": "tsc && node dist/index.js"
+    "dev": "tsc && node scripts/patch-custom-fields.mjs && node dist/index.js"
   },
   "keywords": [
     "pipedrive",
