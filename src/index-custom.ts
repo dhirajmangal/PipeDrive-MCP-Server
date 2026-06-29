@@ -7,6 +7,7 @@ const BASE_URL = process.env.PIPEDRIVE_BASE_URL ?? "https://api.pipedrive.com/v1
 
 const UNIT_TYPE_FIELD_KEY = "5e5e5ca11fecee901991dceb79f39b9235ad5beb";
 const BUYING_PURPOSE_FIELD_KEY = "16729fa3760725ab4339d928c582e7af99271c00";
+const REAL_ESTATE_AGENCY_FIELD_KEY = "839214b23cbb0b624fd696a232c7de757f85f9d8";
 
 function createClient(): AxiosInstance {
   if (!API_TOKEN) {
@@ -94,12 +95,25 @@ function normalizeBuyingPurpose(value: string): string {
   return aliases[cleaned] || normalizeCustomFieldText(value);
 }
 
+function hasValue(value: any): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+}
+
+function valuesMatch(actual: any, expected: any): boolean {
+  if (actual === expected) return true;
+  if (actual === null || actual === undefined) return false;
+  return String(actual) === String(expected);
+}
+
 export function createServer() {
   const server = createBaseServer();
 
   server.tool(
     "pipedrive_debug_deal_custom_fields",
-    "Debug the Unit Type and Buying Purpose deal custom fields, returning field keys, types, and options if present.",
+    "Debug the deal custom fields used by the marketing workflow, returning field keys, types, and options if present.",
     {},
     async () => {
       const fieldsResponse = await pd("GET", "/dealFields", undefined, { limit: 500 });
@@ -109,7 +123,7 @@ export function createServer() {
       }
 
       const fields = fieldsResponse.data || [];
-      const wantedFields = ["Unit Type", "Buying Purpose"];
+      const wantedFields = ["Real Estate Agency", "Buying Purpose", "Unit Type"];
 
       const result = wantedFields.map((fieldName) => {
         const field = fields.find(
@@ -143,15 +157,17 @@ export function createServer() {
 
   server.tool(
     "pipedrive_update_deal_custom_fields",
-    "Update actual Pipedrive deal custom fields for Unit Type and Buying Purpose, with dry-run and verification.",
+    "Update actual Pipedrive deal custom fields. Supports Unit Type, Buying Purpose, Real Estate Agency, and arbitrary custom field keys, with dry-run and verification.",
     {
       deal_id: z.coerce.number().describe("Deal ID"),
       unit_type: z.string().optional().describe("Unit Type, e.g. 2 Bedroom"),
       buying_purpose: z.string().optional().describe("Buying Purpose, e.g. Own Residence or Investment"),
+      real_estate_agency_id: z.coerce.number().optional().describe("Person ID for the Real Estate Agency people custom field"),
+      custom_fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional().describe("Raw Pipedrive custom-field key/value map. Use the exact 40-character field key from dealFields."),
       dry_run: z.boolean().optional().default(false).describe("If true, return payload without writing"),
       overwrite: z.boolean().optional().default(false).describe("If false, do not overwrite existing custom field values"),
     },
-    async ({ deal_id, unit_type, buying_purpose, dry_run = false, overwrite = false }) => {
+    async ({ deal_id, unit_type, buying_purpose, real_estate_agency_id, custom_fields, dry_run = false, overwrite = false }) => {
       const existingDealResponse = await pd("GET", `/deals/${deal_id}`);
 
       if (!existingDealResponse.success) {
@@ -159,31 +175,29 @@ export function createServer() {
       }
 
       const existingDeal = existingDealResponse.data || {};
-      const payload: Record<string, string> = {};
+      const payload: Record<string, any> = {};
       const report: any[] = [];
 
-      if (unit_type) {
-        const existingValue = existingDeal[UNIT_TYPE_FIELD_KEY];
+      function addField(fieldName: string, fieldKey: string, fieldType: string, inputValue: any, valueToSend: any) {
+        const existingValue = existingDeal[fieldKey];
 
-        if (!existingValue || overwrite) {
-          const normalizedValue = normalizeUnitType(unit_type);
-          payload[UNIT_TYPE_FIELD_KEY] = normalizedValue;
-
+        if (!hasValue(existingValue) || overwrite) {
+          payload[fieldKey] = valueToSend;
           report.push({
-            field_name: "Unit Type",
-            field_key: UNIT_TYPE_FIELD_KEY,
-            field_type: "varchar",
-            input_value: unit_type,
-            value_sent_to_pipedrive: normalizedValue,
-            previous_value: existingValue || null,
+            field_name: fieldName,
+            field_key: fieldKey,
+            field_type: fieldType,
+            input_value: inputValue,
+            value_sent_to_pipedrive: valueToSend,
+            previous_value: hasValue(existingValue) ? existingValue : null,
             action: "will_update",
           });
         } else {
           report.push({
-            field_name: "Unit Type",
-            field_key: UNIT_TYPE_FIELD_KEY,
-            field_type: "varchar",
-            input_value: unit_type,
+            field_name: fieldName,
+            field_key: fieldKey,
+            field_type: fieldType,
+            input_value: inputValue,
             previous_value: existingValue,
             action: "skipped_existing_value",
             reason: "overwrite=false",
@@ -191,32 +205,32 @@ export function createServer() {
         }
       }
 
+      if (unit_type) {
+        addField("Unit Type", UNIT_TYPE_FIELD_KEY, "varchar", unit_type, normalizeUnitType(unit_type));
+      }
+
       if (buying_purpose) {
-        const existingValue = existingDeal[BUYING_PURPOSE_FIELD_KEY];
+        addField("Buying Purpose", BUYING_PURPOSE_FIELD_KEY, "varchar", buying_purpose, normalizeBuyingPurpose(buying_purpose));
+      }
 
-        if (!existingValue || overwrite) {
-          const normalizedValue = normalizeBuyingPurpose(buying_purpose);
-          payload[BUYING_PURPOSE_FIELD_KEY] = normalizedValue;
+      if (real_estate_agency_id !== undefined) {
+        addField("Real Estate Agency", REAL_ESTATE_AGENCY_FIELD_KEY, "people", real_estate_agency_id, real_estate_agency_id);
+      }
 
-          report.push({
-            field_name: "Buying Purpose",
-            field_key: BUYING_PURPOSE_FIELD_KEY,
-            field_type: "varchar",
-            input_value: buying_purpose,
-            value_sent_to_pipedrive: normalizedValue,
-            previous_value: existingValue || null,
-            action: "will_update",
-          });
-        } else {
-          report.push({
-            field_name: "Buying Purpose",
-            field_key: BUYING_PURPOSE_FIELD_KEY,
-            field_type: "varchar",
-            input_value: buying_purpose,
-            previous_value: existingValue,
-            action: "skipped_existing_value",
-            reason: "overwrite=false",
-          });
+      if (custom_fields) {
+        for (const [fieldKey, value] of Object.entries(custom_fields)) {
+          if (!/^[a-f0-9]{40}$/i.test(fieldKey)) {
+            report.push({
+              field_name: "Raw custom field",
+              field_key: fieldKey,
+              input_value: value,
+              action: "skipped_invalid_field_key",
+              reason: "Custom field keys should be the exact 40-character Pipedrive field key.",
+            });
+            continue;
+          }
+
+          addField("Raw custom field", fieldKey, "unknown", value, value);
         }
       }
 
@@ -224,7 +238,7 @@ export function createServer() {
         return ok({
           success: false,
           deal_id,
-          reason: "No fields to update. Either no values were provided, or existing values were protected by overwrite=false.",
+          reason: "No fields to update. Either no values were provided, existing values were protected by overwrite=false, or raw custom-field keys were invalid.",
           report,
         });
       }
@@ -254,12 +268,16 @@ export function createServer() {
       const verifiedDeal = verifyResponse.data || {};
 
       const verification = report.map((item) => {
+        if (item.action !== "will_update") {
+          return item;
+        }
+
         const verifiedValue = verifiedDeal[item.field_key];
 
         return {
           ...item,
-          verified_stored_value: verifiedValue || null,
-          verified: Boolean(verifiedValue),
+          verified_stored_value: hasValue(verifiedValue) ? verifiedValue : null,
+          verified: valuesMatch(verifiedValue, item.value_sent_to_pipedrive) || hasValue(verifiedValue),
         };
       });
 
@@ -271,7 +289,7 @@ export function createServer() {
         return ok({
           success: false,
           deal_id,
-          error: "The update was attempted, but the actual Pipedrive custom-field column is still blank after verification.",
+          error: "The update was attempted, but at least one Pipedrive custom-field column is still blank or unverifiable after verification.",
           payload,
           verification,
         });
