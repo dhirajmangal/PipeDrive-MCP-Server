@@ -108,8 +108,73 @@ function valuesMatch(actual: any, expected: any): boolean {
   return String(actual) === String(expected);
 }
 
+function removeRegisteredTool(server: any, toolName: string): void {
+  const candidateStores = [
+    server._registeredTools,
+    server.registeredTools,
+    server._tools,
+    server.tools,
+    server._toolHandlers,
+    server.toolHandlers,
+  ];
+
+  for (const store of candidateStores) {
+    if (!store) continue;
+
+    if (store instanceof Map) {
+      store.delete(toolName);
+    } else if (typeof store === "object") {
+      delete store[toolName];
+    }
+  }
+}
+
 export function createServer() {
   const server = createBaseServer();
+
+  removeRegisteredTool(server as any, "pipedrive_update_deal");
+
+  server.tool(
+    "pipedrive_update_deal",
+    "Update an existing deal, including raw Pipedrive custom deal fields through custom_fields.",
+    {
+      id: z.coerce.number().describe("Deal ID"),
+      title: z.string().optional().describe("Deal title"),
+      value: z.coerce.number().optional().describe("Deal monetary value"),
+      currency: z.string().optional().describe("Currency code"),
+      user_id: z.coerce.number().optional().describe("Owner user ID"),
+      person_id: z.coerce.number().optional().describe("Associated person ID"),
+      org_id: z.coerce.number().optional().describe("Associated organization ID"),
+      pipeline_id: z.coerce.number().optional().describe("Pipeline ID"),
+      stage_id: z.coerce.number().optional().describe("Stage ID"),
+      status: z.enum(["open", "won", "lost"]).optional().describe("Deal status"),
+      expected_close_date: z.string().optional().describe("Expected close date (YYYY-MM-DD)"),
+      probability: z.coerce.number().optional().describe("Deal success probability (%)"),
+      lost_reason: z.string().optional().describe("Reason deal was lost"),
+      visible_to: z.coerce.number().optional().describe("Visibility setting"),
+      custom_fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional().describe("Raw Pipedrive custom-field key/value map. Use the exact 40-character field key from pipedrive_list_deal_fields."),
+    },
+    async ({ id, custom_fields, ...body }) => {
+      const payload: Record<string, any> = { ...body };
+
+      if (custom_fields) {
+        for (const [fieldKey, value] of Object.entries(custom_fields)) {
+          if (!/^[a-f0-9]{40}$/i.test(fieldKey)) {
+            return ok({
+              success: false,
+              error: "Invalid custom field key",
+              field_key: fieldKey,
+              reason: "Use the exact 40-character Pipedrive custom field key from pipedrive_list_deal_fields.",
+            });
+          }
+
+          payload[fieldKey] = value;
+        }
+      }
+
+      return ok(await pd("PUT", `/deals/${id}`, payload));
+    }
+  );
 
   server.tool(
     "pipedrive_debug_deal_custom_fields",
