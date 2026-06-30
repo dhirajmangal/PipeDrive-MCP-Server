@@ -1,7 +1,7 @@
 import express from "express";
 import { randomUUID } from "crypto";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { createServer } from "./index-custom.js";
+import { createServer } from "./index.js";
 
 const app = express();
 app.use(express.json());
