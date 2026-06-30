@@ -133,6 +133,8 @@ export function createServer() {
   const server = createBaseServer();
 
   removeRegisteredTool(server as any, "pipedrive_update_deal");
+  removeRegisteredTool(server as any, "pipedrive_debug_deal_custom_fields");
+  removeRegisteredTool(server as any, "pipedrive_update_deal_custom_fields");
 
   server.tool(
     "pipedrive_update_deal",
