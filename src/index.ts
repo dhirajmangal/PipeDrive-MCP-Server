@@ -121,8 +121,12 @@ export function createServer() {
     probability: z.coerce.number().optional().describe("Deal success probability (%)"),
     lost_reason: z.string().optional().describe("Reason deal was lost"),
     visible_to: z.coerce.number().optional().describe("Visibility setting"),
+    custom_fields: z.record(z.string(), z.any()).optional().describe("Custom field key-value pairs (e.g. custom field IDs as keys)"),
   },
-  async ({ id, ...body }) => ok(await pd("PUT", `/deals/${id}`, body))
+  async ({ id, custom_fields, ...body }) => {
+    const finalBody = custom_fields ? { ...body, ...custom_fields } : body;
+    return ok(await pd("PUT", `/deals/${id}`, finalBody));
+  }
   );
   
   server.tool(
