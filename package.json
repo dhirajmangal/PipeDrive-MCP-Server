@@ -1,6 +1,6 @@
 {
   "name": "pipedrive-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prestart": "npm run build",
     "start": "node dist/http.js",
     "dev": "tsc && node dist/index.js"
   },
